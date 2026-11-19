@@ -1,6 +1,5 @@
 import json
 from pathlib import Path
-from textwrap import dedent
 
 import cv2
 import joblib
@@ -8,15 +7,11 @@ import numpy as np
 import streamlit as st
 
 from PIL import Image
-
-from skimage.feature import (
-    graycomatrix,
-    graycoprops
-)
+from skimage.feature import graycomatrix, graycoprops
 
 
 # ============================================================
-# PAGE CONFIGURATION
+# PAGE
 # ============================================================
 
 st.set_page_config(
@@ -37,222 +32,204 @@ CONFIG_PATH = BASE_DIR / "model_config.json"
 
 
 # ============================================================
-# CUSTOM CSS
+# CSS
 # ============================================================
 
-st.markdown(
-    dedent("""
-    <style>
+st.html("""
+<style>
 
-    .block-container {
-        padding-top: 1rem;
-        padding-bottom: 2rem;
-        max-width: 1500px;
-    }
+.block-container {
+    padding-top: 1rem;
+    padding-bottom: 2rem;
+    max-width: 1500px;
+}
 
-    .main-header {
-        background: linear-gradient(90deg, #064d24, #0b662f);
-        padding: 20px 30px;
-        border-radius: 0px 0px 18px 18px;
-        text-align: center;
-        margin-bottom: 12px;
-    }
+.main-header {
+    background: linear-gradient(90deg,#064d24,#0b662f);
+    padding: 22px;
+    border-radius: 18px;
+    text-align: center;
+    margin-bottom: 14px;
+}
 
-    .main-title {
-        color: white;
-        font-size: 48px;
-        font-weight: 800;
-        margin-bottom: 4px;
-    }
+.main-title {
+    color: white;
+    font-size: 46px;
+    font-weight: 800;
+}
 
-    .main-subtitle {
-        color: white;
-        font-size: 24px;
-        font-weight: 500;
-    }
+.main-subtitle {
+    color: white;
+    font-size: 21px;
+    margin-top: 5px;
+}
 
-    .student-bar {
-        background: linear-gradient(90deg, #e5f7e7, #d7f2db);
-        border-radius: 16px;
-        padding: 16px;
-        text-align: center;
-        font-size: 27px;
-        font-weight: 700;
-        margin-bottom: 18px;
-        color: #111111;
-    }
+.student-bar {
+    background: #dff5e2;
+    border-radius: 16px;
+    padding: 16px;
+    text-align: center;
+    font-size: 25px;
+    font-weight: 700;
+    margin-bottom: 18px;
+}
 
-    .upload-box {
-        background: linear-gradient(90deg, #eef7ff, #f5fbff);
-        border: 2px solid #4285c5;
-        border-radius: 18px;
-        padding: 18px 24px;
-        margin-bottom: 12px;
-    }
+.upload-box {
+    background: #eef7ff;
+    border: 2px solid #4285c5;
+    border-radius: 18px;
+    padding: 20px;
+    margin-bottom: 12px;
+}
 
-    .upload-title {
-        font-size: 28px;
-        font-weight: 800;
-        color: #08296b;
-        margin-bottom: 4px;
-    }
+.upload-title {
+    color: #08296b;
+    font-size: 27px;
+    font-weight: 800;
+}
 
-    .panel-title {
-        background: linear-gradient(90deg, #064d24, #0a632f);
-        color: white;
-        padding: 12px;
-        text-align: center;
-        font-size: 26px;
-        font-weight: 800;
-        border-radius: 14px 14px 0px 0px;
-        margin-bottom: 6px;
-    }
+.upload-text {
+    font-size: 17px;
+    margin-top: 7px;
+}
 
-    .healthy-card {
-        border: 2px solid #2a9d45;
-        border-radius: 18px;
-        background: #effbef;
-        padding: 28px;
-        text-align: center;
-        min-height: 260px;
-    }
+.panel-title {
+    background: #07602e;
+    color: white;
+    padding: 12px;
+    border-radius: 14px 14px 0 0;
+    text-align: center;
+    font-size: 24px;
+    font-weight: 800;
+}
 
-    .diseased-card {
-        border: 2px solid #f07b24;
-        border-radius: 18px;
-        background: #fff2e8;
-        padding: 28px;
-        text-align: center;
-        min-height: 260px;
-    }
+.healthy-card {
+    border: 2px solid #2a9d45;
+    background: #effbef;
+    border-radius: 18px;
+    padding: 30px;
+    text-align: center;
+    min-height: 250px;
+}
 
-    .healthy-result {
-        color: #087c20;
-        font-size: 48px;
-        font-weight: 900;
-        line-height: 1.05;
-    }
+.diseased-card {
+    border: 2px solid #f07b24;
+    background: #fff2e8;
+    border-radius: 18px;
+    padding: 30px;
+    text-align: center;
+    min-height: 250px;
+}
 
-    .diseased-result {
-        color: #df3b10;
-        font-size: 42px;
-        font-weight: 900;
-        line-height: 1.1;
-    }
+.healthy-result {
+    color: #087c20;
+    font-size: 42px;
+    font-weight: 900;
+}
 
-    .agreement-label {
-        font-size: 22px;
-        font-weight: 800;
-        margin-top: 20px;
-    }
+.diseased-result {
+    color: #df3b10;
+    font-size: 38px;
+    font-weight: 900;
+}
 
-    .agreement-value {
-        display: inline-block;
-        background: #f45419;
-        color: white;
-        padding: 8px 18px;
-        border-radius: 14px;
-        font-size: 30px;
-        font-weight: 900;
-        margin-top: 8px;
-    }
+.agreement-label {
+    font-size: 21px;
+    font-weight: 800;
+    margin-top: 25px;
+}
 
-    .agreement-value-green {
-        display: inline-block;
-        background: #138b2c;
-        color: white;
-        padding: 8px 18px;
-        border-radius: 14px;
-        font-size: 30px;
-        font-weight: 900;
-        margin-top: 8px;
-    }
+.agreement-green {
+    display: inline-block;
+    margin-top: 10px;
+    background: #138b2c;
+    color: white;
+    padding: 9px 18px;
+    border-radius: 13px;
+    font-size: 28px;
+    font-weight: 900;
+}
 
-    .method-card {
-        background: #e9faea;
-        border: 1px solid #8cd59a;
-        border-radius: 16px;
-        padding: 18px;
-        margin-top: 14px;
-    }
+.agreement-orange {
+    display: inline-block;
+    margin-top: 10px;
+    background: #f45419;
+    color: white;
+    padding: 9px 18px;
+    border-radius: 13px;
+    font-size: 28px;
+    font-weight: 900;
+}
 
-    .method-title {
-        color: #075b23;
-        font-size: 25px;
-        font-weight: 850;
-    }
+.method-card {
+    background: #e9faea;
+    border: 1px solid #8cd59a;
+    border-radius: 16px;
+    padding: 18px;
+    margin-top: 14px;
+}
 
-    .method-text {
-        color: #111111;
-        font-size: 20px;
-        font-weight: 700;
-        margin-top: 6px;
-    }
+.method-title {
+    color: #075b23;
+    font-size: 23px;
+    font-weight: 800;
+}
 
-    .how-card {
-        background: linear-gradient(90deg, #ddebff, #d8ecff);
-        border-radius: 18px;
-        padding: 24px;
-        margin-top: 24px;
-    }
+.method-text {
+    font-size: 18px;
+    font-weight: 700;
+    margin-top: 7px;
+}
 
-    .how-title {
-        color: #082d73;
-        font-size: 30px;
-        font-weight: 900;
-    }
+.how-card {
+    background: #e5f1ff;
+    border-radius: 18px;
+    padding: 24px;
+    margin-top: 24px;
+}
 
-    .how-text {
-        font-size: 21px;
-        color: #111111;
-        line-height: 1.5;
-    }
+.how-title {
+    color: #082d73;
+    font-size: 28px;
+    font-weight: 900;
+}
 
-    .small-note {
-        text-align: center;
-        color: #666666;
-        font-size: 14px;
-        margin-top: 20px;
-    }
+.how-text {
+    font-size: 19px;
+    line-height: 1.5;
+    margin-top: 8px;
+}
 
-    </style>
-    """),
-    unsafe_allow_html=True
-)
+.note {
+    text-align: center;
+    font-size: 14px;
+    color: #666666;
+    margin-top: 18px;
+}
+
+</style>
+""")
 
 
 # ============================================================
 # HEADER
 # ============================================================
 
-st.markdown(
-    dedent("""
-    <div class="main-header">
-        <div class="main-title">
-            🍅 Tomato Leaf Health Classifier
-        </div>
-
-        <div class="main-subtitle">
-            OpenCV + KNN-Based Plant Health Screening Tool
-        </div>
+st.html("""
+<div class="main-header">
+    <div class="main-title">🍅 Tomato Leaf Health Classifier</div>
+    <div class="main-subtitle">
+        OpenCV + KNN-Based Plant Health Screening Tool
     </div>
-    """),
-    unsafe_allow_html=True
-)
+</div>
+""")
 
 
-# ============================================================
-# STUDENT
-# ============================================================
-
-st.markdown(
-    dedent("""
-    <div class="student-bar">
-        👤 &nbsp; Student: Rishi Karthickeyan
-    </div>
-    """),
-    unsafe_allow_html=True
-)
+st.html("""
+<div class="student-bar">
+    👤 Student: Rishi Karthickeyan
+</div>
+""")
 
 
 # ============================================================
@@ -285,7 +262,7 @@ try:
 except Exception as error:
 
     st.error(
-        "Unable to load the trained model or model configuration."
+        "Unable to load the trained model."
     )
 
     st.code(
@@ -309,12 +286,10 @@ METHOD_CODE = config.get(
 
 
 # ============================================================
-# PREPARE IMAGE
+# IMAGE PREPARATION
 # ============================================================
 
-def prepare_image(
-    pil_image
-):
+def prepare_image(pil_image):
 
     image = np.array(
         pil_image.convert(
@@ -339,14 +314,14 @@ def prepare_image(
 
 
 # ============================================================
-# SEGMENT LEAF
-# IMPORTANT:
-# MUST MATCH REAL-WORLD TRAINING CODE
+# SEGMENTATION
+#
+# MUST MATCH TRAINING
+# saturation > 30
+# value > 20
 # ============================================================
 
-def segment_leaf(
-    image
-):
+def segment_leaf(image):
 
     hsv = cv2.cvtColor(
         image,
@@ -395,9 +370,7 @@ def segment_leaf(
         cv2.CHAIN_APPROX_SIMPLE
     )
 
-    if len(
-        contours
-    ) > 0:
+    if len(contours) > 0:
 
         largest = max(
             contours,
@@ -410,9 +383,7 @@ def segment_leaf(
 
         cv2.drawContours(
             clean_mask,
-            [
-                largest
-            ],
+            [largest],
             -1,
             255,
             -1
@@ -442,14 +413,10 @@ def masked_values(
         mask > 0
     ]
 
-    if len(
-        values
-    ) == 0:
+    if len(values) == 0:
 
         return np.array(
-            [
-                0
-            ],
+            [0],
             dtype=float
         )
 
@@ -458,7 +425,6 @@ def masked_values(
 
 # ============================================================
 # METHOD A
-# SIMPLE COLOR
 # ============================================================
 
 def extract_method_A(
@@ -493,18 +459,10 @@ def extract_method_A(
     brown_mask = cv2.inRange(
         hsv,
         np.array(
-            [
-                0,
-                40,
-                20
-            ]
+            [0, 40, 20]
         ),
         np.array(
-            [
-                30,
-                255,
-                230
-            ]
+            [30, 255, 230]
         )
     )
 
@@ -523,30 +481,21 @@ def extract_method_A(
     )
 
     brown_percentage = (
-        brown_pixels
-        /
-        leaf_pixels
+        brown_pixels / leaf_pixels
         if leaf_pixels > 0
         else 0
     )
 
     return [
-        np.mean(
-            r_values
-        ),
-        np.mean(
-            g_values
-        ),
-        np.mean(
-            b_values
-        ),
+        np.mean(r_values),
+        np.mean(g_values),
+        np.mean(b_values),
         brown_percentage
     ]
 
 
 # ============================================================
 # METHOD B
-# HSV
 # ============================================================
 
 def extract_method_B(
@@ -581,36 +530,20 @@ def extract_method_B(
     green_mask = cv2.inRange(
         hsv,
         np.array(
-            [
-                30,
-                30,
-                20
-            ]
+            [30, 30, 20]
         ),
         np.array(
-            [
-                95,
-                255,
-                255
-            ]
+            [95, 255, 255]
         )
     )
 
     yellow_brown_mask = cv2.inRange(
         hsv,
         np.array(
-            [
-                10,
-                40,
-                20
-            ]
+            [10, 40, 20]
         ),
         np.array(
-            [
-                35,
-                255,
-                255
-            ]
+            [35, 255, 255]
         )
     )
 
@@ -639,40 +572,26 @@ def extract_method_B(
     )
 
     green_percentage = (
-        green_pixels
-        /
-        leaf_pixels
+        green_pixels / leaf_pixels
         if leaf_pixels > 0
         else 0
     )
 
     yellow_percentage = (
-        yellow_pixels
-        /
-        leaf_pixels
+        yellow_pixels / leaf_pixels
         if leaf_pixels > 0
         else 0
     )
 
     return [
-        np.mean(
-            hp
-        ),
-        np.mean(
-            sp
-        ),
-        np.mean(
-            vp
-        ),
-        np.std(
-            hp
-        ),
-        np.std(
-            sp
-        ),
-        np.std(
-            vp
-        ),
+        np.mean(hp),
+        np.mean(sp),
+        np.mean(vp),
+
+        np.std(hp),
+        np.std(sp),
+        np.std(vp),
+
         green_percentage,
         yellow_percentage
     ]
@@ -682,9 +601,7 @@ def extract_method_B(
 # GLCM ENTROPY
 # ============================================================
 
-def calculate_entropy(
-    glcm
-):
+def calculate_entropy(glcm):
 
     probabilities = glcm[
         glcm > 0
@@ -701,7 +618,6 @@ def calculate_entropy(
 
 # ============================================================
 # METHOD C
-# HSV + GLCM TEXTURE
 # ============================================================
 
 def extract_method_C(
@@ -781,29 +697,28 @@ def extract_method_C(
 
 
 # ============================================================
-# UPLOAD AREA
+# UPLOAD
 # ============================================================
 
-st.markdown(
-    dedent("""
-    <div class="upload-box">
-        <div class="upload-title">
-            ☁️ Upload a Tomato Leaf Image
-        </div>
+st.html("""
+<div class="upload-box">
 
-        <div>
-            Choose a JPG, JPEG, or PNG image.
-            For best results, use a clear image where the tomato leaf
-            is visible and reasonably centered.
-        </div>
+    <div class="upload-title">
+        ☁️ Upload a Tomato Leaf Image
     </div>
-    """),
-    unsafe_allow_html=True
-)
+
+    <div class="upload-text">
+        Choose a JPG, JPEG, or PNG image.
+        For best results, use a clear tomato leaf image
+        with the leaf reasonably centered.
+    </div>
+
+</div>
+""")
 
 
 uploaded_file = st.file_uploader(
-    "Choose File",
+    "Choose image",
     type=[
         "jpg",
         "jpeg",
@@ -814,7 +729,7 @@ uploaded_file = st.file_uploader(
 
 
 # ============================================================
-# PROCESS IMAGE
+# PREDICTION
 # ============================================================
 
 if uploaded_file is not None:
@@ -837,9 +752,9 @@ if uploaded_file is not None:
     )
 
 
-    # ========================================================
-    # FEATURES
-    # ========================================================
+    # --------------------------------------------------------
+    # Feature extraction
+    # --------------------------------------------------------
 
     if METHOD_CODE == "A":
 
@@ -849,8 +764,7 @@ if uploaded_file is not None:
         )
 
         method_text = (
-            "Simple Color Features + KNN "
-            "(Method A)"
+            "Simple Color Features + KNN (Method A)"
         )
 
 
@@ -862,8 +776,7 @@ if uploaded_file is not None:
         )
 
         method_text = (
-            "HSV Color Features + KNN "
-            "(Method B)"
+            "HSV Color Features + KNN (Method B)"
         )
 
 
@@ -875,8 +788,7 @@ if uploaded_file is not None:
         )
 
         method_text = (
-            "HSV Color + GLCM Texture + KNN "
-            "(Method C)"
+            "HSV Color + GLCM Texture + KNN (Method C)"
         )
 
 
@@ -889,9 +801,9 @@ if uploaded_file is not None:
     )
 
 
-    # ========================================================
-    # PREDICTION
-    # ========================================================
+    # --------------------------------------------------------
+    # Predict
+    # --------------------------------------------------------
 
     prediction = int(
         model.predict(
@@ -919,33 +831,23 @@ if uploaded_file is not None:
         )
 
 
-    # ========================================================
-    # THREE COLUMNS
-    # ========================================================
+    # --------------------------------------------------------
+    # Display
+    # --------------------------------------------------------
 
     col1, col2, col3 = st.columns(
         [
             1,
             1,
             1.35
-        ],
-        gap="medium"
+        ]
     )
 
 
-    # ========================================================
-    # ORIGINAL IMAGE
-    # ========================================================
-
     with col1:
 
-        st.markdown(
-            dedent("""
-            <div class="panel-title">
-                Original Image
-            </div>
-            """),
-            unsafe_allow_html=True
+        st.html(
+            '<div class="panel-title">Original Image</div>'
         )
 
         st.image(
@@ -954,19 +856,10 @@ if uploaded_file is not None:
         )
 
 
-    # ========================================================
-    # SEGMENTED IMAGE
-    # ========================================================
-
     with col2:
 
-        st.markdown(
-            dedent("""
-            <div class="panel-title">
-                OpenCV Segmentation
-            </div>
-            """),
-            unsafe_allow_html=True
+        st.html(
+            '<div class="panel-title">OpenCV Segmentation</div>'
         )
 
         st.image(
@@ -975,114 +868,99 @@ if uploaded_file is not None:
         )
 
 
-    # ========================================================
-    # RESULT
-    # ========================================================
-
     with col3:
 
-        st.markdown(
-            dedent("""
-            <div class="panel-title">
-                📊 Leaf Health Result
-            </div>
-            """),
-            unsafe_allow_html=True
+        st.html(
+            '<div class="panel-title">📊 Leaf Health Result</div>'
         )
 
 
         if prediction == 0:
 
-            agreement_html = ""
-
             if agreement is not None:
 
-                agreement_html = dedent(
+                agreement_text = (
                     f"""
                     <div class="agreement-label">
                         KNN Neighbor Agreement
                     </div>
 
-                    <div class="agreement-value-green">
+                    <div class="agreement-green">
                         {agreement * 100:.1f}%
                     </div>
                     """
                 )
 
+            else:
 
-            st.markdown(
-                dedent(
-                    f"""
-                    <div class="healthy-card">
+                agreement_text = ""
 
-                        <div class="healthy-result">
-                            ✅ HEALTHY
-                        </div>
 
-                        {agreement_html}
+            st.html(
+                f"""
+                <div class="healthy-card">
 
+                    <div class="healthy-result">
+                        ✅ HEALTHY
                     </div>
-                    """
-                ),
-                unsafe_allow_html=True
+
+                    {agreement_text}
+
+                </div>
+                """
             )
 
 
         else:
 
-            agreement_html = ""
-
             if agreement is not None:
 
-                agreement_html = dedent(
+                agreement_text = (
                     f"""
                     <div class="agreement-label">
                         KNN Neighbor Agreement
                     </div>
 
-                    <div class="agreement-value">
+                    <div class="agreement-orange">
                         {agreement * 100:.1f}%
                     </div>
                     """
                 )
 
+            else:
 
-            st.markdown(
-                dedent(
-                    f"""
-                    <div class="diseased-card">
-
-                        <div class="diseased-result">
-                            ⚠️ DISEASED /<br>
-                            UNHEALTHY
-                        </div>
-
-                        {agreement_html}
-
-                    </div>
-                    """
-                ),
-                unsafe_allow_html=True
-            )
+                agreement_text = ""
 
 
-        st.markdown(
-            dedent(
+            st.html(
                 f"""
-                <div class="method-card">
+                <div class="diseased-card">
 
-                    <div class="method-title">
-                        ⚙️ Method Used
+                    <div class="diseased-result">
+                        ⚠️ DISEASED / UNHEALTHY
                     </div>
 
-                    <div class="method-text">
-                        {method_text}
-                    </div>
+                    {agreement_text}
 
                 </div>
                 """
-            ),
-            unsafe_allow_html=True
+            )
+
+
+        st.html(
+            f"""
+            <div class="method-card">
+
+                <div class="method-title">
+                    ⚙️ Method Used
+                </div>
+
+                <div class="method-text">
+                    {method_text}
+                </div>
+
+            </div>
+            """
         )
 
 
@@ -1090,42 +968,42 @@ if uploaded_file is not None:
     # HOW IT WORKS
     # ========================================================
 
-    st.markdown(
-        dedent("""
-        <div class="how-card">
+    st.html("""
+    <div class="how-card">
 
-            <div class="how-title">
-                🎯 How It Works
-            </div>
+        <div class="how-title">
+            🎯 How It Works
+        </div>
 
-            <div class="how-text">
-                The app first uses <b>OpenCV</b> to isolate the tomato
-                leaf from the image. It then measures
-                <b>HSV color characteristics</b> and
-                <b>GLCM texture characteristics</b>.
-                These features are passed to a
-                <b>K-Nearest Neighbors (KNN)</b> classifier trained
-                using real-world tomato leaf images to classify the
-                image as <b>Healthy</b> or
-                <b>Diseased / Unhealthy</b>.
-            </div>
+        <div class="how-text">
+
+            The application uses <b>OpenCV</b> to isolate the
+            tomato leaf. It then measures <b>HSV color features</b>
+            and <b>GLCM texture features</b>.
+
+            These measurements are evaluated using a
+            <b>K-Nearest Neighbors (KNN)</b> classifier trained
+            on real-world tomato leaf images.
+
+            The model classifies the leaf as
+            <b>Healthy</b> or <b>Diseased / Unhealthy</b>.
 
         </div>
-        """),
-        unsafe_allow_html=True
-    )
+
+    </div>
+    """)
 
 
-    st.markdown(
-        dedent("""
-        <div class="small-note">
-            Educational and research screening tool.
-            The application classifies leaf health only and
-            does not diagnose a specific tomato disease.
-        </div>
-        """),
-        unsafe_allow_html=True
-    )
+    st.html("""
+    <div class="note">
+
+        Educational and research screening tool.
+        The application does not diagnose a specific tomato disease.
+        KNN Neighbor Agreement represents voting among nearby
+        training samples and is not a calibrated probability.
+
+    </div>
+    """)
 
 
 else:
