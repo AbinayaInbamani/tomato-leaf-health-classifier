@@ -1,5 +1,6 @@
 import json
 from pathlib import Path
+from textwrap import dedent
 
 import cv2
 import joblib
@@ -32,7 +33,6 @@ st.set_page_config(
 BASE_DIR = Path(__file__).resolve().parent
 
 MODEL_PATH = BASE_DIR / "tomato_leaf_health_model.joblib"
-
 CONFIG_PATH = BASE_DIR / "model_config.json"
 
 
@@ -41,7 +41,7 @@ CONFIG_PATH = BASE_DIR / "model_config.json"
 # ============================================================
 
 st.markdown(
-    """
+    dedent("""
     <style>
 
     .block-container {
@@ -87,7 +87,7 @@ st.markdown(
         border: 2px solid #4285c5;
         border-radius: 18px;
         padding: 18px 24px;
-        margin-bottom: 20px;
+        margin-bottom: 12px;
     }
 
     .upload-title {
@@ -128,25 +128,25 @@ st.markdown(
 
     .healthy-result {
         color: #087c20;
-        font-size: 50px;
+        font-size: 48px;
         font-weight: 900;
         line-height: 1.05;
     }
 
     .diseased-result {
         color: #df3b10;
-        font-size: 46px;
+        font-size: 42px;
         font-weight: 900;
         line-height: 1.1;
     }
 
-    .confidence-label {
-        font-size: 24px;
+    .agreement-label {
+        font-size: 22px;
         font-weight: 800;
         margin-top: 20px;
     }
 
-    .confidence-value {
+    .agreement-value {
         display: inline-block;
         background: #f45419;
         color: white;
@@ -157,7 +157,7 @@ st.markdown(
         margin-top: 8px;
     }
 
-    .confidence-value-green {
+    .agreement-value-green {
         display: inline-block;
         background: #138b2c;
         color: white;
@@ -178,13 +178,13 @@ st.markdown(
 
     .method-title {
         color: #075b23;
-        font-size: 26px;
+        font-size: 25px;
         font-weight: 850;
     }
 
     .method-text {
         color: #111111;
-        font-size: 21px;
+        font-size: 20px;
         font-weight: 700;
         margin-top: 6px;
     }
@@ -198,14 +198,14 @@ st.markdown(
 
     .how-title {
         color: #082d73;
-        font-size: 32px;
+        font-size: 30px;
         font-weight: 900;
     }
 
     .how-text {
-        font-size: 22px;
+        font-size: 21px;
         color: #111111;
-        line-height: 1.4;
+        line-height: 1.5;
     }
 
     .small-note {
@@ -216,7 +216,7 @@ st.markdown(
     }
 
     </style>
-    """,
+    """),
     unsafe_allow_html=True
 )
 
@@ -226,7 +226,7 @@ st.markdown(
 # ============================================================
 
 st.markdown(
-    """
+    dedent("""
     <div class="main-header">
         <div class="main-title">
             🍅 Tomato Leaf Health Classifier
@@ -236,7 +236,7 @@ st.markdown(
             OpenCV + KNN-Based Plant Health Screening Tool
         </div>
     </div>
-    """,
+    """),
     unsafe_allow_html=True
 )
 
@@ -246,11 +246,11 @@ st.markdown(
 # ============================================================
 
 st.markdown(
-    """
+    dedent("""
     <div class="student-bar">
         👤 &nbsp; Student: Rishi Karthickeyan
     </div>
-    """,
+    """),
     unsafe_allow_html=True
 )
 
@@ -340,6 +340,8 @@ def prepare_image(
 
 # ============================================================
 # SEGMENT LEAF
+# IMPORTANT:
+# MUST MATCH REAL-WORLD TRAINING CODE
 # ============================================================
 
 def segment_leaf(
@@ -357,11 +359,9 @@ def segment_leaf(
 
     mask = np.where(
         (
-            saturation > 25
-        )
-        &
-        (
-            value > 20
+            (saturation > 30)
+            &
+            (value > 20)
         ),
         255,
         0
@@ -395,7 +395,9 @@ def segment_leaf(
         cv2.CHAIN_APPROX_SIMPLE
     )
 
-    if len(contours) > 0:
+    if len(
+        contours
+    ) > 0:
 
         largest = max(
             contours,
@@ -440,10 +442,14 @@ def masked_values(
         mask > 0
     ]
 
-    if len(values) == 0:
+    if len(
+        values
+    ) == 0:
 
         return np.array(
-            [0],
+            [
+                0
+            ],
             dtype=float
         )
 
@@ -517,15 +523,23 @@ def extract_method_A(
     )
 
     brown_percentage = (
-        brown_pixels / leaf_pixels
+        brown_pixels
+        /
+        leaf_pixels
         if leaf_pixels > 0
         else 0
     )
 
     return [
-        np.mean(r_values),
-        np.mean(g_values),
-        np.mean(b_values),
+        np.mean(
+            r_values
+        ),
+        np.mean(
+            g_values
+        ),
+        np.mean(
+            b_values
+        ),
         brown_percentage
     ]
 
@@ -625,26 +639,40 @@ def extract_method_B(
     )
 
     green_percentage = (
-        green_pixels / leaf_pixels
+        green_pixels
+        /
+        leaf_pixels
         if leaf_pixels > 0
         else 0
     )
 
     yellow_percentage = (
-        yellow_pixels / leaf_pixels
+        yellow_pixels
+        /
+        leaf_pixels
         if leaf_pixels > 0
         else 0
     )
 
     return [
-        np.mean(hp),
-        np.mean(sp),
-        np.mean(vp),
-
-        np.std(hp),
-        np.std(sp),
-        np.std(vp),
-
+        np.mean(
+            hp
+        ),
+        np.mean(
+            sp
+        ),
+        np.mean(
+            vp
+        ),
+        np.std(
+            hp
+        ),
+        np.std(
+            sp
+        ),
+        np.std(
+            vp
+        ),
         green_percentage,
         yellow_percentage
     ]
@@ -757,7 +785,7 @@ def extract_method_C(
 # ============================================================
 
 st.markdown(
-    """
+    dedent("""
     <div class="upload-box">
         <div class="upload-title">
             ☁️ Upload a Tomato Leaf Image
@@ -765,9 +793,11 @@ st.markdown(
 
         <div>
             Choose a JPG, JPEG, or PNG image.
+            For best results, use a clear image where the tomato leaf
+            is visible and reasonably centered.
         </div>
     </div>
-    """,
+    """),
     unsafe_allow_html=True
 )
 
@@ -870,7 +900,7 @@ if uploaded_file is not None:
     )
 
 
-    confidence = None
+    agreement = None
 
 
     if hasattr(
@@ -882,7 +912,7 @@ if uploaded_file is not None:
             features
         )[0]
 
-        confidence = float(
+        agreement = float(
             np.max(
                 probabilities
             )
@@ -910,11 +940,11 @@ if uploaded_file is not None:
     with col1:
 
         st.markdown(
-            """
+            dedent("""
             <div class="panel-title">
                 Original Image
             </div>
-            """,
+            """),
             unsafe_allow_html=True
         )
 
@@ -931,11 +961,11 @@ if uploaded_file is not None:
     with col2:
 
         st.markdown(
-            """
+            dedent("""
             <div class="panel-title">
                 OpenCV Segmentation
             </div>
-            """,
+            """),
             unsafe_allow_html=True
         )
 
@@ -952,96 +982,106 @@ if uploaded_file is not None:
     with col3:
 
         st.markdown(
-            """
+            dedent("""
             <div class="panel-title">
                 📊 Leaf Health Result
             </div>
-            """,
+            """),
             unsafe_allow_html=True
         )
 
 
         if prediction == 0:
 
-            confidence_html = ""
+            agreement_html = ""
 
-            if confidence is not None:
+            if agreement is not None:
 
-                confidence_html = f"""
-                <div class="confidence-label">
-                    Model Confidence:
-                </div>
+                agreement_html = dedent(
+                    f"""
+                    <div class="agreement-label">
+                        KNN Neighbor Agreement
+                    </div>
 
-                <div class="confidence-value-green">
-                    {confidence * 100:.1f}%
-                </div>
-                """
+                    <div class="agreement-value-green">
+                        {agreement * 100:.1f}%
+                    </div>
+                    """
+                )
 
 
             st.markdown(
-                f"""
-                <div class="healthy-card">
+                dedent(
+                    f"""
+                    <div class="healthy-card">
 
-                    <div class="healthy-result">
-                        ✅ HEALTHY
+                        <div class="healthy-result">
+                            ✅ HEALTHY
+                        </div>
+
+                        {agreement_html}
+
                     </div>
-
-                    {confidence_html}
-
-                </div>
-                """,
+                    """
+                ),
                 unsafe_allow_html=True
             )
 
 
         else:
 
-            confidence_html = ""
+            agreement_html = ""
 
-            if confidence is not None:
+            if agreement is not None:
 
-                confidence_html = f"""
-                <div class="confidence-label">
-                    Model Confidence:
-                </div>
+                agreement_html = dedent(
+                    f"""
+                    <div class="agreement-label">
+                        KNN Neighbor Agreement
+                    </div>
 
-                <div class="confidence-value">
-                    {confidence * 100:.1f}%
-                </div>
-                """
+                    <div class="agreement-value">
+                        {agreement * 100:.1f}%
+                    </div>
+                    """
+                )
 
 
             st.markdown(
-                f"""
-                <div class="diseased-card">
+                dedent(
+                    f"""
+                    <div class="diseased-card">
 
-                    <div class="diseased-result">
-                        ⚠️ DISEASED /<br>
-                        UNHEALTHY
+                        <div class="diseased-result">
+                            ⚠️ DISEASED /<br>
+                            UNHEALTHY
+                        </div>
+
+                        {agreement_html}
+
                     </div>
-
-                    {confidence_html}
-
-                </div>
-                """,
+                    """
+                ),
                 unsafe_allow_html=True
             )
 
 
         st.markdown(
-            f"""
-            <div class="method-card">
+            dedent(
+                f"""
+                <div class="method-card">
 
-                <div class="method-title">
-                    ⚙️ Method Used
+                    <div class="method-title">
+                        ⚙️ Method Used
+                    </div>
+
+                    <div class="method-text">
+                        {method_text}
+                    </div>
+
                 </div>
-
-                <div class="method-text">
-                    {method_text}
-                </div>
-
-            </div>
-            """,
+                """
+            ),
             unsafe_allow_html=True
         )
 
@@ -1051,60 +1091,39 @@ if uploaded_file is not None:
     # ========================================================
 
     st.markdown(
-        """
+        dedent("""
         <div class="how-card">
 
-            <table style="width:100%;">
-                <tr>
+            <div class="how-title">
+                🎯 How It Works
+            </div>
 
-                    <td style="
-                        width:28%;
-                        vertical-align:middle;
-                        padding-right:25px;
-                    ">
-
-                        <div class="how-title">
-                            🎯 How It Works
-                        </div>
-
-                    </td>
-
-                    <td style="
-                        border-left:2px solid #1865a8;
-                        padding-left:30px;
-                    ">
-
-                        <div class="how-text">
-
-                            The app uses <b>OpenCV</b> to segment
-                            the leaf, then analyzes
-                            <b>HSV color features</b> and
-                            <b>GLCM texture features</b> with a
-                            <b>K-Nearest Neighbors (KNN)</b>
-                            model to predict whether the tomato
-                            leaf is <b>Healthy</b> or
-                            <b>Diseased / Unhealthy</b>.
-
-                        </div>
-
-                    </td>
-
-                </tr>
-            </table>
+            <div class="how-text">
+                The app first uses <b>OpenCV</b> to isolate the tomato
+                leaf from the image. It then measures
+                <b>HSV color characteristics</b> and
+                <b>GLCM texture characteristics</b>.
+                These features are passed to a
+                <b>K-Nearest Neighbors (KNN)</b> classifier trained
+                using real-world tomato leaf images to classify the
+                image as <b>Healthy</b> or
+                <b>Diseased / Unhealthy</b>.
+            </div>
 
         </div>
-        """,
+        """),
         unsafe_allow_html=True
     )
 
 
     st.markdown(
-        """
+        dedent("""
         <div class="small-note">
             Educational and research screening tool.
-            The application does not identify a specific tomato disease.
+            The application classifies leaf health only and
+            does not diagnose a specific tomato disease.
         </div>
-        """,
+        """),
         unsafe_allow_html=True
     )
 
